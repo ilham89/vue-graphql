@@ -4,9 +4,20 @@
     <p v-if="loading">Loading...</p>
     <p v-else-if="error">Something went wrong! Please try again</p>
     <template v-else>
-      <p v-for="book in books" :key="book.id">
-        {{ book.title }}
+      <p v-if="activeBook">
+        Update "{{ activeBook.title }}" rating:
+        <EditRating
+          :initial-rating="activeBook.rating"
+          :book-id="activeBook.id"
+          @closeForm="activeBook = null"
+        />
       </p>
+      <template v-else>
+        <p v-for="book in books" :key="book.id">
+          {{ book.title }} - {{ book.rating }}
+          <button @click="activeBook = book">Edit rating</button>
+        </p>
+      </template>
     </template>
   </div>
 </template>
@@ -16,12 +27,19 @@
 import { useQuery, useResult } from "@vue/apollo-composable";
 import ALL_BOOKS_QUERY from "./graphql/allBooks.query.gql";
 import { ref } from "vue";
+import EditRating from "./components/EditRating.vue";
 
 export default {
   name: "App",
-  setup() {
-    const searchTerm = ref(""); // create a reactive property with 'ref'
+  components: {
+    EditRating,
+  },
 
+  setup() {
+    const searchTerm = ref("");
+    const activeBook = ref(null);
+
+    // for get books
     const { result, loading, error } = useQuery(
       ALL_BOOKS_QUERY,
       () => ({
@@ -34,7 +52,7 @@ export default {
     );
     const books = useResult(result, [], (data) => data.allBooks);
 
-    return { books, searchTerm, loading, error };
+    return { books, searchTerm, loading, error, activeBook };
   },
 };
 </script>
