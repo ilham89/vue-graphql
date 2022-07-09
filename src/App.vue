@@ -23,10 +23,21 @@
         />
       </p>
       <template v-else>
-        <p v-for="book in books" :key="book.id">
-          {{ book.title }} - {{ book.rating }}
-          <button @click="activeBook = book">Edit rating</button>
-        </p>
+        <section class="list-wrapper">
+          <div class="list">
+            <h3>All Books</h3>
+            <p v-for="book in books" :key="book.id">
+              {{ book.title }} - {{ book.rating }}
+              <button @click="activeBook = book">Edit rating</button>
+              <button @click="addBookToFavorites({ book })">
+                Add to Favorites
+              </button>
+            </p>
+          </div>
+          <div class="list">
+            <h3>Favorite Books</h3>
+          </div>
+        </section>
       </template>
     </template>
   </div>
@@ -34,9 +45,11 @@
 
 
 <script>
-import { useQuery, useResult } from "@vue/apollo-composable";
+import { useQuery, useResult, useMutation } from "@vue/apollo-composable";
 import ALL_BOOKS_QUERY from "./graphql/allBooks.query.gql";
 import BOOK_SUBSCRIPTION from "./graphql/newBook.subscription.gql";
+import FAVORITE_BOOKS_QUERY from "./graphql/favoriteBooks.query.gql";
+import ADD_BOOK_TO_FAVORITES_MUTATION from "./graphql/addBookToFavorites.mutation.gql";
 import { ref } from "vue";
 import EditRating from "./components/EditRating.vue";
 import AddBook from "./components/AddBook.vue";
@@ -52,6 +65,7 @@ export default {
     const searchTerm = ref("");
     const activeBook = ref(null);
     const showNewBookForm = ref(false);
+    const { result: favBooksResult } = useQuery(FAVORITE_BOOKS_QUERY);
 
     // for get books
     const { result, loading, error, subscribeToMore } = useQuery(
@@ -79,7 +93,20 @@ export default {
 
     const books = useResult(result, [], (data) => data.allBooks);
 
-    return { books, searchTerm, loading, error, activeBook, showNewBookForm };
+    const { mutate: addBookToFavorites } = useMutation(
+      ADD_BOOK_TO_FAVORITES_MUTATION
+    );
+
+    return {
+      books,
+      searchTerm,
+      loading,
+      error,
+      activeBook,
+      showNewBookForm,
+      favBooksResult,
+      addBookToFavorites,
+    };
   },
 };
 </script>
